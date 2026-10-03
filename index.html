@@ -1,11 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RRR Esports - Play & Earn</title>
+    <title>BD FF TOUR Esports - Play & Earn</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
@@ -1364,9 +1363,9 @@
     <header>
         <div class="logo" onclick="navigate('home')">
             <img id="header-app-icon"
-                src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg2v5v5v5v5v5v5/s1600/rrr-esports-logo.png"
+                src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg2v5v5v5v5v5v5/s1600/BD FF TOUR-esports-logo.png"
                 alt="Logo" onerror="this.style.display='none';">
-            <span id="header-app-name" class="logo-text">RRR ESPORTS</span>
+            <span id="header-app-name" class="logo-text">BD FF TOUR ESPORTS</span>
         </div>
 
         <div class="header-right">
@@ -1441,7 +1440,7 @@
         <div class="auth-container">
             <div style="margin-bottom:20px;">
                 <img id="login-app-icon"
-                    src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg2v5v5v5v5v5v5/s1600/rrr-esports-logo.png"
+                    src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg2v5v5v5v5v5v5/s1600/BD FF TOUR-esports-logo.png"
                     style="height:60px;">
             </div>
             <h2 class="auth-title">Login</h2>
@@ -1475,7 +1474,7 @@
         <div class="auth-container">
             <div style="margin-bottom:20px;">
                 <img id="reg-app-icon"
-                    src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg2v5v5v5v5v5v5/s1600/rrr-esports-logo.png"
+                    src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg2v5v5v5v5v5v5/s1600/BD FF TOUR-esports-logo.png"
                     style="height:60px;">
             </div>
             <h2 class="auth-title">Sign Up</h2>
@@ -1518,7 +1517,7 @@
         <section id="home" class="app-section active">
             <div class="hero-banner">
                 <div class="alert-box">
-                    <marquee id="dynamic-notice">Welcome to RRR Esports! Play daily matches and earn rewards.</marquee>
+                    <marquee id="dynamic-notice">Welcome to BD FF TOUR Esports! Play daily matches and earn rewards.</marquee>
                 </div>
                 <div class="slider-container">
                     <div id="banner-slider-wrapper" class="slider-wrapper">
@@ -1840,7 +1839,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, push, update, get, query, orderByChild, equalTo, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
         // CONFIG
         const firebaseConfig = {
@@ -1855,7 +1853,6 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const storage = getStorage(app);
 
         // --- THEME LOGIC ---
         window.toggleUserTheme = () => {
@@ -2187,7 +2184,7 @@
             }
         });
 
-        // --- PROFILE PHOTO: Gallery -> Firebase Storage -> User Profile ---
+        // --- PROFILE PHOTO: Gallery -> Base64 -> User Profile (No Firebase Storage) ---
         window.openProfilePhotoPicker = () => {
             if (!currentUser) {
                 alert("Please login first.");
@@ -2196,6 +2193,46 @@
             const input = document.getElementById('profile-photo-input');
             if (input) input.click();
         };
+
+        function setAllProfileAvatars(photo) {
+            if (!photo) return;
+            const headerAvatar = document.getElementById('header-avatar');
+            const sidebarAvatar = document.getElementById('sidebar-avatar');
+            const profileAvatar = document.getElementById('profile-page-avatar');
+            if (headerAvatar) headerAvatar.src = photo;
+            if (sidebarAvatar) sidebarAvatar.src = photo;
+            if (profileAvatar) profileAvatar.src = photo;
+        }
+
+        function resizeProfileImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const size = 200;
+                        const canvas = document.createElement('canvas');
+                        canvas.width = size;
+                        canvas.height = size;
+                        const ctx = canvas.getContext('2d');
+
+                        // Center-crop to a square so the profile picture is not stretched.
+                        const scale = Math.max(size / img.width, size / img.height);
+                        const w = img.width * scale;
+                        const h = img.height * scale;
+                        const x = (size - w) / 2;
+                        const y = (size - h) / 2;
+                        ctx.drawImage(img, x, y, w, h);
+
+                        resolve(canvas.toDataURL('image/jpeg', 0.55));
+                    };
+                    img.onerror = () => reject(new Error('ছবিটি পড়া যায়নি।'));
+                    img.src = e.target.result;
+                };
+                reader.onerror = () => reject(new Error('ছবি পড়া যায়নি।'));
+                reader.readAsDataURL(file);
+            });
+        }
 
         window.uploadProfilePhoto = async (event) => {
             const file = event.target.files && event.target.files[0];
@@ -2207,44 +2244,37 @@
                 return;
             }
 
-            // Keep uploads reasonable for a mobile profile picture.
-            if (file.size > 5 * 1024 * 1024) {
-                alert('ছবির সাইজ সর্বোচ্চ 5 MB হতে হবে।');
+            if (file.size > 10 * 1024 * 1024) {
+                alert('ছবির সাইজ সর্বোচ্চ 10 MB হতে হবে।');
                 event.target.value = '';
                 return;
             }
 
-            const sidebarAvatar = document.getElementById('sidebar-avatar');
-            const headerAvatar = document.getElementById('header-avatar');
-            sidebarAvatar?.classList.add('avatar-upload-loading');
-            headerAvatar?.classList.add('avatar-upload-loading');
+            const avatars = [
+                document.getElementById('header-avatar'),
+                document.getElementById('sidebar-avatar'),
+                document.getElementById('profile-page-avatar')
+            ].filter(Boolean);
+            avatars.forEach(el => el.classList.add('avatar-upload-loading'));
 
             try {
-                const extension = (file.name.split('.').pop() || 'jpg').toLowerCase();
-                const photoPath = `profile_photos/${currentUser.uid}/avatar_${Date.now()}.${extension}`;
-                const photoRef = storageRef(storage, photoPath);
+                const base64 = await resizeProfileImage(file);
 
-                await uploadBytes(photoRef, file, { contentType: file.type });
-                const downloadURL = await getDownloadURL(photoRef);
+                // Save only inside the currently logged-in user's own UID.
+                const userPhotoRef = ref(db, 'users/' + currentUser.uid);
+                await update(userPhotoRef, {
+                    photoURL: base64,
+                    photo: base64
+                });
 
-                // Update Firebase Authentication profile.
-                await updateProfile(currentUser, { photoURL: downloadURL });
-
-                // Also save the URL in Realtime Database so the app can load it later.
-                await update(ref(db, 'users/' + currentUser.uid), { photoURL: downloadURL });
-
-                sidebarAvatar.src = downloadURL;
-                headerAvatar.src = downloadURL;
-                const profileAvatar = document.getElementById('profile-page-avatar');
-                if (profileAvatar) profileAvatar.src = downloadURL;
-
+                // Show immediately in all three User Panel locations.
+                setAllProfileAvatars(base64);
                 alert('Profile photo updated successfully.');
             } catch (error) {
-                console.error('Profile photo upload failed:', error);
-                alert('ছবি আপলোড করা যায়নি। Firebase Storage Rules/Storage চালু আছে কি না দেখুন।');
+                console.error('Profile photo save failed:', error);
+                alert(error.message || 'ছবি সেভ করা যায়নি।');
             } finally {
-                sidebarAvatar?.classList.remove('avatar-upload-loading');
-                headerAvatar?.classList.remove('avatar-upload-loading');
+                avatars.forEach(el => el.classList.remove('avatar-upload-loading'));
                 event.target.value = '';
             }
         };
@@ -2274,12 +2304,8 @@
             onValue(userRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    if (data.photoURL) {
-                        document.getElementById('sidebar-avatar').src = data.photoURL;
-                        document.getElementById('header-avatar').src = data.photoURL;
-                        const profileAvatar = document.getElementById('profile-page-avatar');
-                        if (profileAvatar) profileAvatar.src = data.photoURL;
-                    }
+                    const savedPhoto = data.photoURL || data.photo;
+                    if (savedPhoto) setAllProfileAvatars(savedPhoto);
                     if (data.banned) {
                         alert("Your account has been banned by Admin.");
                         handleLogout();
